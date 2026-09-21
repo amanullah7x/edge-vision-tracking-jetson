@@ -16,6 +16,8 @@ The pipeline executing real-time target acquisition and continuous bounding-box 
 
 ![Aerial Target Tracking Demo](assets/demo.gif)
 
+> **Technical Benchmark Note:** Evaluated on real-world aerial test sample (licensed stock footage) to test scale invariance and low-contrast target tracking.
+
 ---
 
 ## 📊 Model Evaluation & Training Metrics
