@@ -6,9 +6,9 @@ Authors: Amanullah Naseer (amanullah7x)
 License: MIT
 
 Features:
-- Hardware-accelerated GStreamer ingestion via nvarguscamerasrc / v4l2.
-- Real-time TensorRT / quantized YOLO inference engine wrapper.
-- Multi-object tracking association state machine.
+- Video pipeline support via OpenCV.
+- Real-time vehicle detection model wrapper.
+- Detection association state machine.
 - Low-latency MAVLink vision target packet emission over serial UART.
 """
 
@@ -193,7 +193,7 @@ def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Deterministic Edge Vision Tracking Pipeline (Jetson AGX Orin)")
     parser.add_argument("--source", type=str, default="csi://0", help="Video source (e.g. csi://0, /dev/video0, or test.mp4)")
     parser.add_argument("--weights", type=str, default="weights/yolo_nano_int8.engine", help="Path to TensorRT engine weights")
-    parser.add_argument("--target-class", type=str, default="tank", help="Target class name or ID to associate")
+    parser.add_argument("--target-class", type=str, default="vehicle", help="Target class name or ID to associate")
     parser.add_argument("--mavlink", type=str, default=None, help="MAVLink serial port or UDP endpoint (e.g. /dev/ttyTHS0:115200)")
     parser.add_argument("--baud", type=int, default=115200, help="UART baudrate for companion FCU bridge")
     parser.add_argument("--max-frames", type=int, default=None, help="Exit after N frames (useful for CI/benchmarking)")
