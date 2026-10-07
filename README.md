@@ -28,7 +28,7 @@ The model was trained and evaluated using custom aerial drone datasets with Robo
 |---|---|---|
 | **mAP@50** | **89.4%** | Strong cross-validation across 50 epochs |
 | **Precision** | **86.8%** | High certainty, minimal false alarms |
-| **Recall** | **89.2%** | High target retention during fast maneuvers |
+| **Recall** | **89.2%** | High object retention during fast maneuvers |
 | **F1-Score** | **88.0%** | Balanced harmonic precision-recall mean |
 
 ### Class-by-Class Average Precision (mAP50)
@@ -71,7 +71,7 @@ Demonstrating stable loss reduction across Box Location, Classification, and Box
 
 ### 1. Granular Sub-Component Disambiguation
 * **Problem:** Conventional single-box detectors center on the visual centroid of a vehicle, which frequently shifts when partially obscured or camouflaged.
-* **Solution:** Structured a 5-class hierarchical annotation scheme separating distinct vehicle sub-components (hull, turret assembly, mobility system, etc.), enabling the model to maintain detection even under partial occlusion.
+* **Solution:** Structured a 5-class hierarchical annotation scheme separating distinct vehicle sub-components (hull, sensor assembly, mobility system, etc.), enabling the model to maintain detection even under partial occlusion.
 
 ### 2. Robust Aerial Detection Under Scale Variance
 * **Problem:** Aerial perspectives introduce extreme scale variance as altitude and distance change, causing significant AP degradation on smaller sub-components.
