@@ -6,7 +6,7 @@
 [![Evaluation](https://img.shields.io/badge/mAP%4050-89.4%25-brightgreen.svg)]()
 [![Telemetry](https://img.shields.io/badge/MAVLink-v2.0-red.svg)]()
 
-> A deterministic computer vision deployment pipeline for high-speed hierarchical target detection and continuous tracking on resource-constrained embedded companion hardware. Instead of identifying whole vehicles only, this custom-trained **RF-DETR Nano** model detects and distinguishes between sub-components (**Tank**, **Turret**, and **Track**) to provide granular targeting coordinates for autonomous UAV guidance.
+> A deterministic computer vision deployment pipeline for high-speed hierarchical target detection and continuous tracking on resource-constrained embedded companion hardware. Instead of identifying whole vehicles only, this custom-trained **RF-DETR Nano** model detects and distinguishes between various vehicle sub-components across 5 distinct classes to provide granular targeting coordinates for autonomous UAV guidance.
 
 ---
 
@@ -32,9 +32,11 @@ The model was trained and evaluated using custom aerial drone datasets with Robo
 | **F1-Score** | **88.0%** | Balanced harmonic precision-recall mean |
 
 ### Class-by-Class Average Precision (mAP50)
-* **Tank (Whole Body):** 89.0% AP
-* **Turret (Upper Assembly):** 97.0% AP
-* **Track (Mobility System):** 69.0% AP
+* **Class 0:** 100% AP
+* **Class 1:** 69.0% AP
+* **Class 2:** 97.0% AP
+* **Class 3:** 87.0% AP
+* **Class 4:** 94.0% AP
 
 ### 1. Hierarchical Sub-Component Detection
 The model simultaneously localizes multiple sub-parts of the target to compute granular aim-point offsets:
@@ -60,7 +62,7 @@ Demonstrating stable loss reduction across Box Location, Classification, and Box
 [ TensorRT INT8 Engine ] ───────(Sub-20ms RF-DETR Nano Inference)
             │
             ▼
-[ Hierarchical Tracker ] ───────(BoT-SORT Association: Tank, Turret, Track)
+[ Hierarchical Tracker ] ───────(BoT-SORT Association: Multi-Class)
             │
             ▼
 [ Target Guidance Logic ] ──────(LOS Angular Offset & Velocity Vector)
@@ -74,8 +76,8 @@ Demonstrating stable loss reduction across Box Location, Classification, and Box
 ## ⚙️ Key Technical Challenges & Solutions
 
 ### 1. Granular Sub-Component Disambiguation
-* **Problem:** Conventional single-box detectors center aim-points on the visual centroid of an armored vehicle, which frequently shifts when hulls are partially obscured or camouflaged.
-* **Solution:** Structured a multi-class hierarchical annotation scheme separating `Tank`, `Turret`, and `Track`. The downstream flight guidance logic can selectively lock onto the Turret center for precise gimbal targeting or Track assemblies for mobility inhibition.
+* **Problem:** Conventional single-box detectors center tracking points on the visual centroid of a vehicle, which frequently shifts when hulls are partially obscured or camouflaged.
+* **Solution:** Structured a 5-class hierarchical annotation scheme separating distinct vehicle sub-components. The downstream flight guidance logic can selectively lock onto specific sub-assemblies for precise gimbal tracking even under partial occlusion.
 
 ### 2. Zero-Copy Edge Ingestion & Latency Ceiling
 * **Problem:** Ingesting 1080p frames through userspace OpenCV copies introduced 15–20ms latency before inference began, causing control jitter on companion computers.
