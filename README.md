@@ -1,22 +1,22 @@
-# Custom RF-DETR Nano Aerial Target Tracking Pipeline (Jetson AGX Orin)
+# Custom RF-DETR Nano Aerial Vehicle Detection (Trained & Validated on Roboflow)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-NVIDIA%20Jetson%20AGX%20Orin-green.svg)]()
-[![Model](https://img.shields.io/badge/Model-RF--DETR%20Nano%20(INT8)-orange.svg)]()
+[![Model](https://img.shields.io/badge/Model-RF--DETR%20Nano-orange.svg)]()
 [![Evaluation](https://img.shields.io/badge/mAP%4050-89.4%25-brightgreen.svg)]()
 [![Telemetry](https://img.shields.io/badge/MAVLink-v2.0-red.svg)]()
 
-> A deterministic computer vision deployment pipeline for high-speed hierarchical target detection and continuous tracking on resource-constrained embedded companion hardware. Instead of identifying whole vehicles only, this custom-trained **RF-DETR Nano** model detects and distinguishes between various vehicle sub-components across 5 distinct classes to provide granular targeting coordinates for autonomous UAV guidance.
+> Fine-tuned **RF-DETR Nano** (PyTorch-based) via Roboflow on a custom-annotated aerial dataset. Instead of identifying whole vehicles only, the model detects and distinguishes between various vehicle sub-components across 5 hierarchical classes, achieving **89.4% mAP@50** on the validation set.
 
 ---
 
-## 📽️ Demo & Real-Time Aerial Tracking
+## 📽️ Demo & Aerial Vehicle Detection
 
-The pipeline executing real-time target acquisition and continuous bounding-box tracking from an aerial drone perspective:
+The model performing aerial vehicle detection and sub-component classification from a drone perspective:
 
-![Aerial Target Tracking Demo](assets/demo.gif)
+![Aerial Vehicle Detection Demo](assets/demo.gif)
 
-> **Technical Benchmark Note:** Evaluated on real-world aerial test sample (licensed stock footage) to test scale invariance and low-contrast target tracking.
+> **Technical Benchmark Note:** Evaluated on real-world aerial test sample (licensed stock footage) to test scale invariance and low-contrast detection.
 
 ---
 
@@ -39,7 +39,7 @@ The model was trained and evaluated using custom aerial drone datasets with Robo
 * **Class 4:** 94.0% AP
 
 ### 1. Hierarchical Sub-Component Detection
-The model simultaneously localizes multiple sub-parts of the target to compute granular aim-point offsets:
+The model simultaneously localizes multiple sub-parts of each vehicle across 5 annotated classes:
 
 ![Sub-Component Detection](assets/rf_detr_eval.png)
 
@@ -50,25 +50,19 @@ Demonstrating stable loss reduction across Box Location, Classification, and Box
 
 ---
 
-## 🏗️ System Architecture
+## 🏗️ Model Training & Evaluation Pipeline
 
 ```
-[ Sony IMX415 / MIPI-CSI ]
-            │ (Raw Bayer Frames via CSI-2)
-            ▼
-[ Hardware ISP (Jetson NVMM) ] ──(Zero-Copy DMA Memory)
+[ Custom Aerial Dataset ] ──(Annotated across 5 vehicle sub-component classes)
             │
             ▼
-[ TensorRT INT8 Engine ] ───────(Sub-20ms RF-DETR Nano Inference)
+[ Roboflow Platform ] ─────(Data augmentation: scaling, rotation, brightness)
             │
             ▼
-[ Hierarchical Tracker ] ───────(BoT-SORT Association: Multi-Class)
+[ RF-DETR Nano (PyTorch) ] ──(50-epoch training with convergence monitoring)
             │
             ▼
-[ Target Guidance Logic ] ──────(LOS Angular Offset & Velocity Vector)
-            │
-            ▼ (UART / 115200 Baud @ 50 Hz)
-[ Pixhawk FCU (PX4/ArduPilot) ]
+[ Validation Metrics ] ─────(89.4% mAP@50 | 86.8% Precision | 89.2% Recall)
 ```
 
 ---
@@ -76,27 +70,21 @@ Demonstrating stable loss reduction across Box Location, Classification, and Box
 ## ⚙️ Key Technical Challenges & Solutions
 
 ### 1. Granular Sub-Component Disambiguation
-* **Problem:** Conventional single-box detectors center tracking points on the visual centroid of a vehicle, which frequently shifts when hulls are partially obscured or camouflaged.
-* **Solution:** Structured a 5-class hierarchical annotation scheme separating distinct vehicle sub-components. The downstream flight guidance logic can selectively lock onto specific sub-assemblies for precise gimbal tracking even under partial occlusion.
+* **Problem:** Conventional single-box detectors center on the visual centroid of a vehicle, which frequently shifts when partially obscured or camouflaged.
+* **Solution:** Structured a 5-class hierarchical annotation scheme separating distinct vehicle sub-components (hull, turret assembly, mobility system, etc.), enabling the model to maintain detection even under partial occlusion.
 
-### 2. Zero-Copy Edge Ingestion & Latency Ceiling
-* **Problem:** Ingesting 1080p frames through userspace OpenCV copies introduced 15–20ms latency before inference began, causing control jitter on companion computers.
-* **Solution:** Implemented a hardware-accelerated GStreamer pipeline (`nvarguscamerasrc` + `nvvidconv`) utilizing unified Jetson DMA memory pointers (`memory:NVMM`). Frames flow directly from the ISP to the NPU/TensorRT engine without CPU memory copying.
-
-| Precision Mode | Inference Latency | Throughput (FPS) | VRAM Allocation | Power Draw |
-|---|---|---|---|---|
-| **FP32** | 64.1 ms | 15.6 FPS | 3.4 GB | 23.8 W |
-| **FP16** | 28.4 ms | 35.2 FPS | 1.8 GB | 16.4 W |
-| **INT8 (Quantized)** | **18.2 ms** | **54.9 FPS** | **1.1 GB** | **11.2 W** |
+### 2. Robust Aerial Detection Under Scale Variance
+* **Problem:** Aerial perspectives introduce extreme scale variance as altitude and distance change, causing significant AP degradation on smaller sub-components.
+* **Solution:** Applied Roboflow augmentation pipelines (scaling, rotational variance, brightness and contrast shifts) to simulate diverse flight altitudes and lighting conditions. Achieved strong per-class AP across all 5 categories.
 
 ---
 
 ## 🛠️ Stack & Dependencies
-* **Compute:** NVIDIA Jetson AGX Orin / Xavier NX / Raspberry Pi 5
-* **Core Languages:** Python 3.10+, C++17
-* **Inference & Vision:** TensorRT, RF-DETR / Ultralytics, OpenCV 4.8+
-* **Tracking:** BoT-SORT / ByteTrack
-* **Autopilot Comms:** pymavlink, pyzmq
+* **Model:** RF-DETR Nano (PyTorch-based)
+* **Training & Validation:** Roboflow Platform
+* **Core Languages:** Python 3.10+
+* **Vision:** OpenCV 4.8+
+* **Dataset:** Custom-annotated aerial vehicle imagery (5 classes)
 
 ---
 
@@ -109,17 +97,7 @@ cd edge-vision-tracking-jetson
 pip install -r requirements.txt
 ```
 
-### 2. Run Benchmark / Demo
+### 2. Run Inference Demo
 ```bash
-python run_pipeline.py --max-frames 120 --target-class tank
-```
-
-### 3. Deploy on Jetson Companion with Live Camera & MAVLink
-```bash
-python run_pipeline.py \
-  --source "csi://0" \
-  --weights "weights/rf_detr_nano_int8.engine" \
-  --target-class "tank" \
-  --mavlink "/dev/ttyTHS0" \
-  --baud 115200
+python run_pipeline.py --max-frames 120
 ```
